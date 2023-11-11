@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spyglass-custom"
+description = "Addendum to Spyglass"
+readme = "README.md"
+requires-python = ">=3.9,<3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Chris Brozdowski", email = "chris.broz@ucsf.edu" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+keywords = [
+  "neuroscience", "datajoint"
+]
+dependencies = [ "datajoint" ]
+dynamic = ["version"]
+
+[project.urls]
+"Homepage" = "https://github.com/cbroz1/datajoint_linter"
+"Bug Tracker" = "https://github.com/cbroz1/datajoint_linter/issues"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+# this file is created/updated when the package is installed and used in
+# src/spyglass/__init__.py to set `spyglass.__version__`
+version-file = "src/datajoint_linter/_version.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = [".git_archival.txt"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/datajoint_linter"]
+exclude = []
+
+[tool.black]
+line-length = 80
+
+[tool.codespell]
+skip = '.git,*.pdf,*.svg,*.ipynb,./docs/site/**'
+# Nevers - name in Citation
+ignore-words-list = ''
