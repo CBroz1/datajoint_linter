@@ -1,5 +1,6 @@
-# Custom 
+# Custom
 temp*
+dj_local_conf*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
