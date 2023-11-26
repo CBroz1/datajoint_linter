@@ -16,7 +16,7 @@ __NOTE__: Work in progress
 
 1. Install the
     [PyLint Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint)
-
+    
 
 2. Test your installation on the example schema to see example errors.
 
