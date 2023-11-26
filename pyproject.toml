@@ -2,19 +2,15 @@
 name = "datajoint_linter"
 description = "Linter for DataJoint table definitions"
 readme = "README.md"
-requires-python = ">=3.9,<3.10"
-authors = [
-    { name = "Chris Brozdowski", email = "chris.broz@ucsf.edu" },
-]
+requires-python = ">=3.9"
+authors = [ { name = "Chris Brozdowski", email = "cbrozdowski@yahoo.com" } ]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-keywords = [
-  "neuroscience", "datajoint"
-]
-dependencies = [ "datajoint", "pylint" ]
+keywords = [ "neuroscience", "datajoint" ]
+dependencies = [ "datajoint", "pylint", "astroid" ]
 version = "0.0.0"
 
 [project.urls]
@@ -30,4 +26,10 @@ ignore-words-list = 'cbroz1'
 
 [tool.pylint.MASTER]
 load-plugins = 'datajoint_linter'
-disable = 'use-dict-literal,consider-using-f-string'
+disable='E0401,E0102,W0611,W0621,W0401,W0614'
+# E0401: Unable to import - varies by environment
+# E0102: Function redefined - for Merge tables
+# W0611: Unused import - for foreign key imports
+# W0621: Outer scope - false positives on key in make
+# W0401: Wildcard error - for testing custom err
+# W0614: Wildcard error - for testing custom err
