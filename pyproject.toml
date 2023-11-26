@@ -22,7 +22,7 @@ line-length = 80
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg,*.ipynb,./docs/site/**'
-ignore-words-list = 'cbroz1'
+ignore-words-list = 'astroid'
 
 [tool.pylint.MASTER]
 load-plugins = 'datajoint_linter'

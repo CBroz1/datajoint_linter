@@ -2,9 +2,9 @@
 
 import datajoint as dj
 
-from datajoint_linter import *
+from datajoint_linter import *  # noqa: F403 # To launch custom error
 
-from .schema_good import GoodTable1
+from .schema_good import GoodTable1  # noqa: F401
 
 schema = dj.Schema("lint_bad")
 

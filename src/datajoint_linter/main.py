@@ -42,7 +42,7 @@ class DataJointLinter(BaseChecker):
         "C0006": (
             "`%s` err: Invalid foreign key option %s",
             "bad-opt",
-            "Supported foriegn key options: nullable and unique",
+            "Supported foreign key options: nullable and unique",
         ),
     }
 

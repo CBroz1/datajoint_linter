@@ -14,17 +14,36 @@ pip install datajoint_linter # in default python environment
 
 __NOTE__: Work in progress
 
-1. Install the [PyLint Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint)
-1. Add the following to your `settings.json` file:
+1. Install the
+    [PyLint Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint)
 
-```json
-{
-    "pylint.args": [
-        "--load-plugins=datajoint_linter",
-        "--disable=E0401,W0401,W0611,W0621"
-    ]
-}
-```
+
+2. Test your installation on the example schema to see example errors.
+
+    ```console
+    cd datajoint_linter
+    pylint tests/schema_bad.py
+    ```
+
+3. Find your pylint path
+
+    ```console
+    whereis pylint
+    ```
+
+4. Add the following to your `settings.json` file:
+
+    ```json
+    {
+        "pylint.path": [
+            "/your/path/pylint"
+        ],
+        "pylint.args": [
+            "--load-plugins=datajoint_linter",
+            "--disable=E0401,W0401,W0611,W0621"
+        ]
+    }
+    ```
 
 These disable codes are recommended for any DataJoint project. They disable
 
@@ -42,7 +61,7 @@ look similar.
 local null_ls = require "null-ls"
 local lint = null_ls.builtins.diagnostics
 local sources = {
-    lint.pylint.with({ extra_args = { 
+    lint.pylint.with({ extra_args = {
         "--load-plugins=datajoint_linter",
         "--disable=E0401,W0401,W0611,W0621"
     }})
@@ -60,11 +79,25 @@ This package is a static analysis tool of the `definition` for standard Tables
 
 Without running your code, it won't catch foreign type errors. For example,
 
-- `-> m.NonexistentClass` will only be checked before the `.` to test
-    for the presence `mm` in the namespace (e.g, `import my_module as m`)
-- `-> imported_obj` will only be checked for the persence of
-    `imported_obj` in the namespace (e.g.,
-    `from my_module import imported_obj`). It will not check that DataJoint
-    supports referencing this object type  as foreign keys.
+- `-> m.NonexistentClass` will only be checked before the `.` to test for the
+    presence `mm` in the namespace (e.g, `import my_module as m`)
+- `-> imported_obj` will only be checked for the presence of `imported_obj` in
+    the namespace (e.g., `from my_module import imported_obj`). It will not
+    check that DataJoint supports referencing this object type as foreign keys.
 - `-> Table.proj(new='bad_key')` will not be caught as the linter does not check
     the contents of projections
+
+## Tests
+
+Work in progress
+
+## To do
+
+Portions of the linter rely on extracted pieces from DataJoint's
+`compile_foreign_key` method syntax because the `prepare_declare` without any
+`context`, which prempively hits the first error in this method. This project
+could either ...
+
+1. Run dynamic analysis, to fully process foreign key references in context.
+2. PR to `datajoint-python` to extract pieces of declaration into private
+    methods to be reused here.
