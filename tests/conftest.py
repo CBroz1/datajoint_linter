@@ -1,5 +1,4 @@
 import re
-from collections.abc import Callable
 
 import pytest
 from pylint import checkers

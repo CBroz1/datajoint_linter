@@ -38,4 +38,3 @@ disable='E0401,E0102,W0611,W0621,W0401,W0614'
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]
-

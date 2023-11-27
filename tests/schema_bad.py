@@ -2,7 +2,7 @@
 
 import datajoint as dj
 
-from datajoint_linter import *
+from datajoint_linter import *  # noqa: F403
 
 from .schema_good import GoodTable1  # noqa: F401
 

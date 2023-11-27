@@ -3,7 +3,7 @@ Sample schema with realistic tables for testing
 """
 
 import datajoint as dj
-from datajoint import Manual as _Merge
+from datajoint import Manual as _Merge  # Testing Spyglass custom table type
 
 schema = dj.Schema("lint_good")
 
