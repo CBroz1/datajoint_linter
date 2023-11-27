@@ -16,7 +16,6 @@ __NOTE__: Work in progress
 
 1. Install the
     [PyLint Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint)
-    
 
 2. Test your installation on the example schema to see example errors.
 
@@ -40,12 +39,15 @@ __NOTE__: Work in progress
         ],
         "pylint.args": [
             "--load-plugins=datajoint_linter",
+            "--permit-dj-filepaths=y", 
             "--disable=E0401,W0401,W0611,W0621"
         ]
     }
     ```
 
-These disable codes are recommended for any DataJoint project. They disable
+`permit-dj-filepath` will quiet warnings about use of filepath datatypes.
+
+The above disable codes are recommended for any DataJoint project. They disable
 
 - E0401: Unable to import - install packages vary by environment
 - E0102: Function redefined - for Merge tables
@@ -63,6 +65,7 @@ local lint = null_ls.builtins.diagnostics
 local sources = {
     lint.pylint.with({ extra_args = {
         "--load-plugins=datajoint_linter",
+        "--permit-dj-filepaths=y", 
         "--disable=E0401,W0401,W0611,W0621"
     }})
 }
@@ -87,9 +90,17 @@ Without running your code, it won't catch foreign type errors. For example,
 - `-> Table.proj(new='bad_key')` will not be caught as the linter does not check
     the contents of projections
 
+This linter also does not execute checks to see if filepath types have been
+enabled in the user's environment. To enable them, use the
+`--permit-dj-filepaths` flag.
+
 ## Tests
 
-Work in progress
+Tests passing as of `datajoint-python` version `0.14.1`.
+
+```console
+pytest .
+```
 
 ## To do
 

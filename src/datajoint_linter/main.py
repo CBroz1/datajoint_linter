@@ -5,7 +5,8 @@ from astroid import nodes
 from datajoint.declare import foreign_key_parser, prepare_declare
 from datajoint.errors import DataJointError
 from pylint.checkers import BaseChecker
-from pylint.interfaces import IAstroidChecker
+
+# from pylint.interfaces import IAstroidChecker
 
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
@@ -31,7 +32,7 @@ class DataJointLinter(BaseChecker):
         ),
         "C0004": (
             "`%s` err: Table references the same foreign key multiple times",
-            "mult-fk",
+            "mult-fk-ref",
             "Tables should not repeat references",
         ),
         "C0005": (
@@ -44,21 +45,26 @@ class DataJointLinter(BaseChecker):
             "bad-opt",
             "Supported foreign key options: nullable and unique",
         ),
+        "C0007": (
+            "`%s` err: Filepath type not supported",
+            "no-fp",
+            "To disable this check, use --permit-dj-filepath",
+        ),
     }
 
     options = (
         (
-            "ignore-ints",
+            "permit-dj-filepath",
             {
                 "default": False,
                 "type": "yn",
                 "metavar": "<y or n>",
-                "help": "Allow returning non-unique integers",
+                "help": "Disable check for filepath datatype",
             },
         ),
     )
 
-    __implements__ = IAstroidChecker
+    # __implements__ = IAstroidChecker
 
     CHECKED_CLASSES = (
         "dj.Manual",
@@ -74,6 +80,12 @@ class DataJointLinter(BaseChecker):
         super().__init__(linter)
         self._class_namespace = set()
         self._module_namespace = set()
+        # Versions differ in how they store config
+        self._permit_filepath = (
+            self.config.permit_dj_filepath
+            if hasattr(self, "config")
+            else self.linter.config.permit_dj_filepath
+        )
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         if node.basenames[0] not in self.CHECKED_CLASSES:
@@ -105,6 +117,10 @@ class DataJointLinter(BaseChecker):
         except DataJointError as error:
             if self._fk_check(node, error, definition):
                 return
+
+            if "filepath data" in error.args[0] and not self._permit_filepath:
+                self.add_message("no-fp", node=node, args=node.name)
+                return
             self.add_message(
                 "definition-error", node=node, args=(node.name, error)
             )
@@ -129,13 +145,11 @@ class DataJointLinter(BaseChecker):
 
         fk = self._get_fk_from_err(error)
         in_pk = fk in definition.split("---")[0].split("___")[0]
-        fk_ref = [line for line in definition.split("\n") if fk in line]
-        # import pdb
-        #
-        # pdb.set_trace()
+        fk_pad = f" {fk}"  # avoid mult ref where one table substring of another
+        fk_ref = [line for line in definition.split("\n") if fk_pad in line]
 
-        if len(fk_ref) > 1:
-            self.add_message("mult-ref", node=node, args=node.name)
+        if len(fk_ref) != 1:
+            self.add_message("mult-fk-ref", node=node, args=node.name)
 
         options = [
             opt.upper()

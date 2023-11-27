@@ -8,6 +8,7 @@ from datajoint import Manual as _Merge
 schema = dj.Schema("lint_good")
 
 
+# TEST 00
 @schema
 class GoodTable1(dj.Lookup):
     """Docstring"""
@@ -21,6 +22,7 @@ class GoodTable1(dj.Lookup):
     contents = [(k, 2 * k, "a") for k in range(10)]
 
 
+# TEST 01
 @schema
 class GoodTable2(dj.Computed):
     """Docstring"""
@@ -44,6 +46,7 @@ class GoodTable2(dj.Computed):
         self.insert1({**key, "new_value": 2 * key.get("value", 0)})
 
 
+# TEST 02
 @schema
 class GoodTable3(_Merge):
     """Docstring"""
@@ -67,6 +70,7 @@ class GoodTable3(_Merge):
         """
 
 
+# TEST 03
 @schema
 class UncaughtBadFK(dj.Manual):
     """Docstring"""

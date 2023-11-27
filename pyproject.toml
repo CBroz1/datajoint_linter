@@ -33,3 +33,9 @@ disable='E0401,E0102,W0611,W0621,W0401,W0614'
 # W0621: Outer scope - false positives on key in make
 # W0401: Wildcard error - for testing custom err
 # W0614: Wildcard error - for testing custom err
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+

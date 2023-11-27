@@ -2,13 +2,14 @@
 
 import datajoint as dj
 
-from datajoint_linter import *  # noqa: F403 # To launch custom error
+from datajoint_linter import *
 
 from .schema_good import GoodTable1  # noqa: F401
 
 schema = dj.Schema("lint_bad")
 
 
+# TEST 05
 @schema
 class DataTypeErr(dj.Lookup):
     """Unsupported attribute type {type}"""
@@ -22,6 +23,7 @@ class DataTypeErr(dj.Lookup):
     contents = [(k, 2 * k, "a") for k in range(10)]
 
 
+# TEST 06
 @schema
 class BadFKRef(dj.Manual):
     """Foreign key reference %s could not be resolved"""
@@ -33,6 +35,7 @@ class BadFKRef(dj.Manual):
     """
 
 
+# TEST 07
 @schema
 class NoPK(dj.Manual):
     """Table must have a primary key"""
@@ -43,6 +46,7 @@ class NoPK(dj.Manual):
     """
 
 
+# TEST 08
 @schema
 class NullablePK(dj.Manual):
     """Primary key attributes cannot be nullable in line %s"""
@@ -54,6 +58,7 @@ class NullablePK(dj.Manual):
     """
 
 
+# TEST 09
 @schema
 class NullableFKRef(dj.Manual):
     """Primary dependencies cannot be nullable in line {line}"""
@@ -64,6 +69,7 @@ class NullableFKRef(dj.Manual):
     """
 
 
+# TEST 10
 @schema
 class BadFKOpt(dj.Imported):
     """Invalid foreign key option {opt}"""
@@ -78,6 +84,7 @@ class BadFKOpt(dj.Imported):
         pass
 
 
+# TEST 11
 @schema
 class NotSupportFilepath(dj.Computed):
     """The filepath data type is disabled until complete validation."""
@@ -92,6 +99,7 @@ class NotSupportFilepath(dj.Computed):
         pass
 
 
+# TEST 12
 @schema
 class GoodMaster(dj.Manual):
     """Docstring"""
@@ -103,6 +111,7 @@ class GoodMaster(dj.Manual):
     -> [unique, nullable] GoodTable1.proj(new="uncaught_bad_key")
     """
 
+    # TEST 13
     class BadPart(dj.Part):
         """Table comment must not start with a colon :"""
 
@@ -112,6 +121,7 @@ class GoodMaster(dj.Manual):
         """
 
 
+# TEST 14
 @schema
 class ColonComment(dj.Manual):
     """An attribute comment must not start with a colon in comment {comment}"""
@@ -121,6 +131,7 @@ class ColonComment(dj.Manual):
     """
 
 
+# TEST 15
 @schema
 class DeclarationErr(dj.Manual):
     """Declaration error in position {pos} in line:\n  {line}\n{msg}"""
@@ -130,6 +141,7 @@ class DeclarationErr(dj.Manual):
     """
 
 
+# TEST 16
 @schema
 class BlobDefault(dj.Manual):
     """The default value for a blob ... can only be NULL in:\n{line}"""
@@ -141,6 +153,7 @@ class BlobDefault(dj.Manual):
     """
 
 
+# TEST 17
 @schema
 class ParseErr(dj.Manual):
     """Parsing error in line %s. %s."""
@@ -149,4 +162,16 @@ class ParseErr(dj.Manual):
     new_key       : int auto_increment # key
     ---
     [ParseErr] -> BadFKRef
+    """
+
+
+# TEST 18
+@schema
+class MultiplePKRef(dj.Manual):
+    """Tables references fk multiple times"""
+
+    definition = """ # Table docstring
+    -> GoodTable1
+    -> GoodTable1
+    new_key       : int auto_increment # key
     """
