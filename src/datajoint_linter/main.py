@@ -6,15 +6,13 @@ from datajoint.declare import foreign_key_parser, prepare_declare
 from datajoint.errors import DataJointError
 from pylint.checkers import BaseChecker
 
-# from pylint.interfaces import IAstroidChecker
-
 if TYPE_CHECKING:
     from pylint.lint import PyLinter
 
 
 class DataJointLinter(BaseChecker):
-    name = "unique-returns"
-    msgs = {  # CWEFR = Custom Warning Error Fatal Refactor
+    name = "datajoint-linter"
+    msgs = {
         "C0001": (
             "`%s` err: %s",
             "definition-error",
@@ -50,6 +48,11 @@ class DataJointLinter(BaseChecker):
             "no-fp",
             "To disable this check, use --permit-dj-filepath",
         ),
+        "C0008": (
+            "`%s` err: Table missing definition attribute",
+            "no-def",
+            "Table appears to be missing a definition attribute",
+        ),
     }
 
     options = (
@@ -64,8 +67,6 @@ class DataJointLinter(BaseChecker):
         ),
     )
 
-    # __implements__ = IAstroidChecker
-
     CHECKED_CLASSES = (
         "dj.Manual",
         "dj.Table",
@@ -73,37 +74,54 @@ class DataJointLinter(BaseChecker):
         "dj.Imported",
         "dj.Computed",
         "dj.Part",
-        "_Merge",
+        "_Merge",  # Spyglass-specific table type
     )
 
     def __init__(self, linter: Optional["PyLinter"] = None) -> None:
+        """Initialize the checker.
+
+        Attributes
+        ----------
+        _class_namespace : set
+            Set of table names defined in the module
+        _module_namespace : set
+            Set of module names imported in the module as alias or name
+        """
         super().__init__(linter)
         self._class_namespace = set()
         self._module_namespace = set()
-        # Versions differ in how they store config
-        self._permit_filepath = (
-            self.config.permit_dj_filepath
-            if hasattr(self, "config")
-            else self.linter.config.permit_dj_filepath
-        )
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
+        """Captures table definitions, runs dj's prepare_declare"""
         if node.basenames[0] not in self.CHECKED_CLASSES:
-            return
+            return  # Skip non-dj classes
+
         self._class_namespace.add(node.name)
 
-        def_attr, definition = self._get_def(node)
+        definition = self._get_def(node)
 
-        if not isinstance(def_attr, nodes.node_classes.Const):
+        if not definition:
             return
 
         self._prepare_declare(node, definition)
 
-    def _get_def(self, node):
-        def_attr = next(node.getattr("definition")[0].assigned_stmts())
-        return def_attr, def_attr.value
+    def _get_def(self, node: nodes.ClassDef) -> str | None:
+        """Gets the definition of the table from the classdef"""
+        def_attr = node.locals.get("definition")
 
-    def _prepare_declare(self, node, definition):
+        if not def_attr:
+            self.add_message("no-def", node=node, args=node.name)
+            return None
+
+        def_obj = next(node.getattr("definition")[0].assigned_stmts())
+
+        if not isinstance(def_obj, nodes.node_classes.Const):
+            return None  # Skip complex definitions like functions
+
+        return def_obj.value
+
+    def _prepare_declare(self, node: nodes.ClassDef, definition: str) -> None:
+        """Runs dj's prepare_declare, checks for errors"""
         try:
             (
                 _,
@@ -112,15 +130,17 @@ class DataJointLinter(BaseChecker):
                 _,
                 _,
                 _,
-            ) = prepare_declare(definition, {})
+            ) = prepare_declare(definition, context={})
             # TODO: Refactor to include context, dynamic analysis
         except DataJointError as error:
             if self._fk_check(node, error, definition):
                 return
 
-            if "filepath data" in error.args[0] and not self._permit_filepath:
-                self.add_message("no-fp", node=node, args=node.name)
+            if "filepath data" in error.args[0]:
+                if not self.linter.config.permit_dj_filepath:
+                    self.add_message("no-fp", node=node, args=node.name)
                 return
+
             self.add_message(
                 "definition-error", node=node, args=(node.name, error)
             )
@@ -138,17 +158,32 @@ class DataJointLinter(BaseChecker):
             .strip()  # remove spaces
         )
 
-    def _fk_check(self, node, error, definition):
+    def _fk_check(self, node: nodes.ClassDef, error: str, definition: str):
+        """Checks foreign key errors
+
+        Without passing context to prepare_declare, it will raise fk reference
+        error false positives. This runs checks performed after the fk error in
+        prepare_declare, and then checks our sets for valid references.
+
+        Parameters
+        ----------
+        node : nodes.ClassDef
+            The classdef node of the table
+        error : str
+            The error message from the DataJointError raised by prepare_declare
+        definition : str
+            DataJoint table definition string
+        """
         # TODO: PR to DJ to refactor subsets into private methods this can use?
         if not error.args[0].startswith("Foreign"):
-            return False  # return if not fk
+            return False  # return if not fk error
 
         fk = self._get_fk_from_err(error)
         in_pk = fk in definition.split("---")[0].split("___")[0]
         fk_pad = f" {fk}"  # avoid mult ref where one table substring of another
         fk_ref = [line for line in definition.split("\n") if fk_pad in line]
 
-        if len(fk_ref) != 1:
+        if len(fk_ref) != 1:  # check for multiple references
             self.add_message("mult-fk-ref", node=node, args=node.name)
 
         options = [
@@ -159,9 +194,8 @@ class DataJointLinter(BaseChecker):
         for opt in options:  # check for invalid options
             if opt not in {"NULLABLE", "UNIQUE"}:
                 self.add_message("bad-opt", node=node, args=(node.name, opt))
-        is_nullable = "NULLABLE" in options
-        if is_nullable and in_pk:
-            self.add_message("null-pk-ref", node=node, args=node.name)
+            elif opt == "NULLABLE" and in_pk:
+                self.add_message("null-pk-ref", node=node, args=node.name)
 
         if (
             (node.basenames[0] == "dj.Part" and fk == "master")  # master ref
@@ -189,6 +223,9 @@ class DataJointLinter(BaseChecker):
 def register(linter: "PyLinter") -> None:
     """This required method auto registers the checker during initialization.
 
-    :param linter: The linter to register the checker to.
+    Parameters
+    ----------
+    linter
+        The linter to register the checker to.
     """
     linter.register_checker(DataJointLinter(linter))

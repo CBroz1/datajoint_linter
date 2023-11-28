@@ -175,3 +175,11 @@ class MultiplePKRef(dj.Manual):
     -> GoodTable1
     new_key       : int auto_increment # key
     """
+
+
+# TEST 19
+@schema
+class NoDefinition(dj.Manual):
+    """No table definition attribute"""
+
+    pass

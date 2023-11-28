@@ -10,15 +10,18 @@ from datajoint_linter.main import DataJointLinter  # noqa: #401
 class TestDataJointLinter(CheckerTestCase):
     CHECKER_CLASS = DataJointLinter
 
-    # Adding permittied fk refs in checks
-    # DataJointLinter._class_namespace.add("GoodTable1")
-    # DataJointLinter._module_namespace.add("dj")
+    # To add fk refs to namespace for an isolated test:
+    #    self.checker._class_namespace.add("goodtable1")
+    #    self.checker._module_namespace.add("dj")
+    # To adjust config for an isolated test:
+    #    self.linter.config.permit_dj_filepath = True
 
     @contextlib.contextmanager
-    def assertAddsMessages(
-        self, *messages: MessageTest, ignore_position: bool = False
-    ):
-        """Redefine to only compare string reprs of message args"""
+    def assertAddsMessages(self, *messages: MessageTest):
+        """Redefines parent class func to only compare string reprs of args
+
+        Also removes unused positition arg flag
+        """
         yield
         got = self.linter.release_messages()
         no_msg = "No message."
@@ -35,13 +38,6 @@ class TestDataJointLinter(CheckerTestCase):
             assert expected_msg.msg_id == gotten_msg.msg_id, msg
             assert expected_msg.node == gotten_msg.node, msg
             assert str(expected_msg.args) == str(gotten_msg.args), msg
-            # No need to check confidence
-            # assert expected_msg.confidence == gotten_msg.confidence, msg
-
-            if ignore_position:
-                # Do not check for line, col_offset etc...
-                continue
-
             assert expected_msg.line == gotten_msg.line, msg
             assert expected_msg.col_offset == gotten_msg.col_offset, msg
 
@@ -71,7 +67,6 @@ class TestDataJointLinter(CheckerTestCase):
 
     def test_wildcard_import(self, test_cases_bad):
         my_import = astroid.extract_node("from datajoint import *")
-        # need broken mult assign?
         with self.assertAddsMessages(
             MessageTest(
                 msg_id="dj-wildcard-import",
@@ -206,6 +201,12 @@ class TestDataJointLinter(CheckerTestCase):
         ):
             self.checker.visit_classdef(my_class)
 
+    def test_permit_fp(self, test_cases_bad):
+        my_class = astroid.extract_node(test_cases_bad[7])
+        self.linter.config.permit_dj_filepath = True
+        with self.assertNoMessages():
+            self.checker.visit_classdef(my_class)
+
     def test_no_comment_colon(self, test_cases_bad):
         my_class = astroid.extract_node(test_cases_bad[9])
         self.checker._class_namespace.add("GoodTable1")
@@ -325,6 +326,21 @@ class TestDataJointLinter(CheckerTestCase):
                 col_offset=0,
                 end_line=2,
                 end_col_offset=19,
+            ),
+        ):
+            self.checker.visit_classdef(my_class)
+
+    def test_no_definition(self, test_cases_bad):
+        my_class = astroid.extract_node(test_cases_bad[15])
+        with self.assertAddsMessages(
+            MessageTest(
+                msg_id="no-def",
+                node=my_class,
+                args="NoDefinition",
+                line=2,
+                col_offset=0,
+                end_line=2,
+                end_col_offset=13,
             ),
         ):
             self.checker.visit_classdef(my_class)

@@ -14,7 +14,6 @@ pip install datajoint_linter # in your IDE's python environment
 
 1. Install the
     [PyLint Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint)
-    
 
 2. Test your installation on the example schema to see example errors.
 
@@ -86,7 +85,7 @@ This package is a static analysis tool of the `definition` for standard Tables
 Without running your code, it won't catch foreign type errors. For example,
 
 - `-> m.NonexistentClass` will only be checked before the `.` to test for the
-    presence `mm` in the namespace (e.g, `import my_module as m`)
+    presence `m` in the namespace (e.g, `import my_module as m`)
 - `-> imported_obj` will only be checked for the presence of `imported_obj` in
     the namespace (e.g., `from my_module import imported_obj`). It will not
     check that DataJoint supports referencing this object type as foreign keys.

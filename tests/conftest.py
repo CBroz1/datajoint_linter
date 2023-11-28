@@ -8,6 +8,8 @@ from pylint.reporters import BaseReporter
 
 
 def _read_input(file):
+    """Reads the input file and returns a list of test cases"""
+    # TODO: Return dict with named cases or parametrize fixtures
     with open(file) as f:
         return [line.strip() for line in re.split(r"\s*# TEST \d{2}", f.read())]
 
@@ -30,6 +32,7 @@ def linter(
     disable: str,
     reporter: BaseReporter,
 ) -> PyLinter:
+    """Returns a linter with the given checker registered."""
     _linter = PyLinter()
     _linter.set_reporter(reporter())
     checkers.initialize(_linter)
