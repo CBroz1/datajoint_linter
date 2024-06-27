@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
-import astroid  # noqa: #401
+import astroid  # noqa: F401
 from astroid import nodes
 from datajoint.declare import foreign_key_parser, prepare_declare
 from datajoint.errors import DataJointError
@@ -105,7 +105,7 @@ class DataJointLinter(BaseChecker):
 
         self._prepare_declare(node, definition)
 
-    def _get_def(self, node: nodes.ClassDef) -> str | None:
+    def _get_def(self, node: nodes.ClassDef) -> Union[str, None]:
         """Gets the definition of the table from the classdef"""
         def_attr = node.locals.get("definition")
 

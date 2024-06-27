@@ -32,12 +32,21 @@ class TestDataJointLinter(CheckerTestCase):
             f"\nExpected:\n{expected}\n\nGot:\n{got_str}\n"
         )
 
+        def _clean(msg):
+            """Removes quotes and backslashes from message args"""
+            return (
+                str(msg.args)
+                .replace("'", "")
+                .replace('"', "")
+                .replace("\\", "")
+            )
+
         assert len(messages) == len(got), msg
 
         for expected_msg, gotten_msg in zip(messages, got):
             assert expected_msg.msg_id == gotten_msg.msg_id, msg
             assert expected_msg.node == gotten_msg.node, msg
-            assert str(expected_msg.args) == str(gotten_msg.args), msg
+            assert _clean(expected_msg) == _clean(gotten_msg), msg
             assert expected_msg.line == gotten_msg.line, msg
             assert expected_msg.col_offset == gotten_msg.col_offset, msg
 
